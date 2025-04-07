@@ -5,6 +5,13 @@
 This application allows users to enhance and correct texts written in Spanish using a locally running Large Language Model (LLM): **Mistral-7B-Instruct-v0.1** in **GGUF format**. It features a lightweight and accessible **graphical interface built with Tkinter**, and **does not require any internet connection or external APIs**.
 
 The model processes user input using instruction-based prompts and returns a rewritten version that is more fluent, grammatically correct, and stylistically improved, while maintaining the original meaning.
+---
+
+## 📥 Model Download
+
+To use this application, download the Mistral-7B-Instruct model (GGUF format) from the following link:
+
+🔗 [mistral-7b-instruct-v0.1.Q4_0.gguf](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/blob/main/mistral-7b-instruct-v0.1.Q4_0.gguf)
 
 ---
 
