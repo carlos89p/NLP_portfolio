@@ -37,3 +37,8 @@ El modelo interpreta instrucciones y devuelve una versión mejorada del texto qu
 
 ---
 
+![Interfaz inicial](screenshots/image1.png)
+
+
+![Interfaz inicial](screenshots/image2.png)
+
