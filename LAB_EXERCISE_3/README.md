@@ -20,9 +20,8 @@ The model processes user input using instruction-based prompts and returns a rew
 
 ## 🧠 How It Works
 
-1. The user writes or pastes a Spanish text they want to improve in the top input box.
+1. The user writes or pastes a text they want to improve in the top input box.
 2. By clicking the **"Improve Text"** button, the application sends the input to the local LLM using an instruction format like:
-
 
 
 3. The model generates a corrected and improved version of the text, which is then displayed in the output box below.
@@ -53,4 +52,15 @@ Once the button is pressed, the model processes the input and returns a cleaner 
 ---
 
 ## 📂 Project Structure
+
+```
+llm-text-improver/
+├── models/
+│   └── mistral-7b-instruct-v0.1.Q4_K_M.gguf
+├── main.py
+├── screenshots/
+│   ├── image1.png       # Initial input interface
+│   └── image2.png       # Output after text improvement
+└── README.md
+```
 
