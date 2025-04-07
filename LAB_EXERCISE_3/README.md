@@ -17,6 +17,82 @@ The model processes user input using instruction-based prompts and returns a rew
 | `Mistral-7B-Instruct`| Open-source LLM optimized for following natural language instructions.  |
 
 ---
+## 🧾 Code Explanation
+
+This section explains how the code works and how the model is integrated into the graphical interface.
+
+---
+
+### 🔍 1. Model Initialization
+
+```python
+llm = Llama(
+    model_path="models/mistral-7b-instruct-v0.1.Q4_0.gguf",
+    n_ctx=2048,
+    n_threads=6,
+    n_gpu_layers=30
+)
+```
+
+- Loads the **Mistral-7B-Instruct** model from a local `.gguf` file using `llama-cpp-python`.
+- `n_ctx` defines the context length (max tokens the model can handle).
+- `n_threads` sets how many CPU threads to use for inference.
+- `n_gpu_layers` specifies how many layers to run on GPU (if available) to speed up execution.
+
+---
+
+### 💬 2. Text Enhancement Function
+
+```python
+def mejorar_texto(prompt_usuario):
+    prompt = f"[INST] Mejora y corrige el siguiente texto en español, manteniendo el sentido original: {prompt_usuario} [/INST]"
+    respuesta = llm(prompt, max_tokens=512, temperature=0.7, stop=["</s>"])
+    return respuesta["choices"][0]["text"].strip()
+```
+
+- Constructs an **instructional prompt** to guide the model in correcting and improving the input text.
+- Calls the model with:
+  - `max_tokens`: maximum number of tokens to generate.
+  - `temperature`: creativity level (0.7 is balanced).
+  - `stop`: token(s) that signal where to stop generation.
+- Returns the model's response as clean text.
+
+---
+
+### 🧵 3. Background Processing with Threads
+
+```python
+def procesar_texto():
+    ...
+    threading.Thread(target=tarea).start()
+```
+
+- Retrieves user input from the GUI.
+- Disables the button and displays a “Processing...” message.
+- Runs the model interaction in a **separate thread** to avoid freezing the GUI.
+- Once the model finishes, it updates the output box with the result or an error message.
+
+---
+
+### 🖼️ 4. Graphical User Interface (GUI)
+
+```python
+ventana = tk.Tk()
+...
+ventana.mainloop()
+```
+
+- The GUI is built with **Tkinter**, a built-in Python library for graphical interfaces.
+- Components:
+  - A `Text` box for the user to input the original text.
+  - A `Button` to trigger the improvement function.
+  - Another `Text` box to display the improved result.
+- The layout uses `pack()` for simplicity and responsiveness.
+
+---
+
+This structure keeps the application lightweight, offline, and user-friendly — allowing efficient use of a powerful LLM locally without APIs or command-line tools.
+
 
 ## 🧠 How It Works
 
