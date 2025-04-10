@@ -3,12 +3,12 @@ from tkinter import filedialog, messagebox
 from llama_cpp import Llama
 import threading
 
-# Carga del modelo GGUF (ajusta el path a donde lo tengas guardado)
+# Carga del modelo GGUF
 llm = Llama(
     model_path="models/mistral-7b-instruct-v0.1.Q4_0.gguf",
     n_ctx=2048,
     n_threads=6,
-    n_gpu_layers=30  # Si tienes GPU, puedes ajustarlo
+    n_gpu_layers=30 
 )
 
 # Función para interactuar con el modelo
