@@ -14,12 +14,12 @@ llm = Llama(
 # Función para interactuar con el modelo
 def mejorar_texto(prompt_usuario):
     prompt = f"[INST] Mejora y corrige el siguiente texto en español, manteniendo el sentido original: {prompt_usuario} [/INST]"
-    respuesta = llm(prompt, max_tokens=512, temperature=0.7, stop=["</s>"])
-    return respuesta["choices"][0]["text"].strip()
+    respuesta = llm(prompt, max_tokens=512, temperature=0.7, stop=["</s>"]) 
+    return respuesta["choices"][0]["text"].strip() 
 
 # Función que corre en un hilo
 def procesar_texto():
-    texto = entrada_texto.get("1.0", tk.END).strip()
+    texto = entrada_texto.get("1.0", tk.END).strip()  
     if not texto:
         messagebox.showwarning("Aviso", "Introduce un texto para procesar.")
         return
