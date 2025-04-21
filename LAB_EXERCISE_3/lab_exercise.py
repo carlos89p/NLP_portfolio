@@ -6,9 +6,9 @@ import threading
 # Carga del modelo GGUF
 llm = Llama(
     model_path="models/mistral-7b-instruct-v0.1.Q4_0.gguf",
-    n_ctx=2048,
-    n_threads=6,
-    n_gpu_layers=30 
+    n_ctx=2048, # Tamaño del contexto.
+    n_threads=6, # Número de hilos que sirven para la inferencia
+    n_gpu_layers=30 # Número de capas en GPU
 )
 
 # Función para interactuar con el modelo
