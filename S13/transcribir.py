@@ -1,43 +1,47 @@
-import os
-from pytube import YouTube
-import S13.transcribir as transcribir
+import subprocess
+import whisper
+import sys
 
-def descargar_audio_youtube(link, filename='audio.mp3'):
+def transcribe_youtube_audio(url):
+    print("Extrayendo audio en streaming con yt_dlp...")
+
+    # Comando para obtener solo el audio y mandarlo a stdout
+    command = [
+        'yt-dlp',
+        '-f', 'bestaudio',
+        '-o', '-',  # salida a stdout
+        '--quiet',
+        '--no-warnings',
+        url
+    ]
+
+    # ffmpeg convierte el stream de audio a wav en tiempo real
+    ffmpeg_cmd = [
+        'ffmpeg',
+        '-i', 'pipe:0',         # entrada desde stdin (yt_dlp)
+        '-f', 'wav',            # formato de salida
+        '-acodec', 'pcm_s16le', # códec sin compresión
+        '-ar', '16000',         # frecuencia de muestreo
+        '-ac', '1',             # canal mono
+        'pipe:1'                # salida a stdout (para whisper)
+    ]
+
+    # conectar yt_dlp y ffmpeg
     try:
-        yt = YouTube(link)
-        print(f"Descargando: {yt.title}")
-        audio_stream = yt.streams.filter(only_audio=True).first()
-        audio_stream.download(filename=filename)
-        print(f"Audio descargado como {filename}")
-        return filename
+        yt_dlp_proc = subprocess.Popen(command, stdout=subprocess.PIPE)
+        ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=yt_dlp_proc.stdout, stdout=subprocess.PIPE)
+
+        model = whisper.load_model("base")  # puedes cambiar a tiny, small, etc.
+        print("Transcribiendo audio...")
+
+        # transcribe el audio directamente desde el output de ffmpeg
+        result = model.transcribe(ffmpeg_proc.stdout)
+        print("\n📝 Transcripción:\n")
+        print(result["text"])
+
     except Exception as e:
-        print(f"Error al descargar audio: {e}")
-        return None
-
-def transcribir_audio(ruta_audio):
-    print("Cargando modelo Whisper...")
-    model = transcribir.load_model("base")  # Puedes cambiar a 'small', 'medium', 'large' según prefieras
-    print("Transcribiendo audio...")
-    resultado = model.transcribe(ruta_audio)
-    return resultado['text']
-
-def main():
-    link = input("Introduce el enlace de YouTube: ")
-    audio_file = "audio.mp3"
-
-    ruta = descargar_audio_youtube(link, filename=audio_file)
-    if ruta:
-        texto = transcribir_audio(ruta)
-        print("\n📝 Transcripción:")
-        print(texto)
-
-        with open("transcripcion.txt", "w", encoding="utf-8") as f:
-            f.write(texto)
-        print("\n✅ Transcripción guardada en 'transcripcion.txt'.")
-
-        # Eliminar el archivo de audio
-        os.remove(audio_file)
-        print(f"🧹 Archivo temporal '{audio_file}' eliminado.")
+        print(f"Error durante la transcripción: {e}")
 
 if __name__ == "__main__":
-    main()
+    url = input("Introduce el enlace de YouTube: ").strip()
+    transcribe_youtube_audio(url)
