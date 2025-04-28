@@ -1,3 +1,4 @@
+import streamlit as st
 import speech_recognition as sr
 import pyttsx3
 import requests
@@ -10,40 +11,31 @@ import os
 # LOCAL Text-To-Speech (TTS)
 # ----------------------------
 def local_text_to_speech(text):
-    print("[Local TTS] Speaking...")
     engine = pyttsx3.init()
     engine.say(text)
     engine.runAndWait()
-
 
 # ----------------------------
 # LOCAL Speech-To-Text (STT)
 # ----------------------------
 def local_speech_to_text():
-    print("[Local STT] Listening...")
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
+        st.info("Listening... Please speak now!")
         audio = recognizer.listen(source)
     try:
         text = recognizer.recognize_google(audio)
-        print(f"[Local STT] Recognized: {text}")
         return text
     except sr.UnknownValueError:
-        print("[Local STT] Could not understand audio.")
-        return ""
+        return "[Could not understand audio]"
     except sr.RequestError as e:
-        print(f"[Local STT] Error with service; {e}")
-        return ""
+        return f"[Error with service: {e}]"
 
 # ----------------------------
 # EXTERNAL API Speech-To-Text
-# (Using AssemblyAI or a similar free API)
 # ----------------------------
 def external_speech_to_text(api_key, audio_file_path):
-    print("[External STT] Sending audio to external API...")
     headers = {'authorization': api_key}
-    
-    # Upload audio file
     with open(audio_file_path, 'rb') as f:
         upload_response = requests.post(
             'https://api.assemblyai.com/v2/upload',
@@ -52,10 +44,7 @@ def external_speech_to_text(api_key, audio_file_path):
         )
     audio_url = upload_response.json()['upload_url']
     
-    # Request transcription
-    transcript_request = {
-        "audio_url": audio_url
-    }
+    transcript_request = {"audio_url": audio_url}
     response = requests.post(
         'https://api.assemblyai.com/v2/transcript',
         json=transcript_request,
@@ -63,7 +52,6 @@ def external_speech_to_text(api_key, audio_file_path):
     )
     transcript_id = response.json()['id']
     
-    # Poll for completion
     while True:
         polling = requests.get(
             f'https://api.assemblyai.com/v2/transcript/{transcript_id}',
@@ -71,19 +59,14 @@ def external_speech_to_text(api_key, audio_file_path):
         ).json()
         
         if polling['status'] == 'completed':
-            print(f"[External STT] Transcription: {polling['text']}")
             return polling['text']
         elif polling['status'] == 'failed':
-            print("[External STT] Failed to transcribe.")
-            return ""
-        
+            return "[Failed transcription]"
 
 # ----------------------------
 # EXTERNAL API Text-To-Speech
-# (Using ElevenLabs API for TTS)
 # ----------------------------
 def external_text_to_speech(api_key, text, voice_id="EXAVITQu4vr4xnSDxMaL"):
-    print("[External TTS] Requesting speech from external API...")
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
     headers = {
@@ -106,30 +89,20 @@ def external_text_to_speech(api_key, text, voice_id="EXAVITQu4vr4xnSDxMaL"):
         temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
         temp_audio_file.write(audio_content)
         temp_audio_file.close()
-        print(f"[External TTS] Playing received speech...")
-        os.system(f"start {temp_audio_file.name}" if os.name == 'nt' else f"afplay {temp_audio_file.name}")
+        return temp_audio_file.name
     else:
-        print("[External TTS] Error:", response.text)
-
+        return None
 
 # ----------------------------
 # Keyword Spotting
 # ----------------------------
 def keyword_spotting(text, keyword):
-    print(f"[Keyword Spotting] Looking for '{keyword}'...")
-    if keyword.lower() in text.lower():
-        print(f"[Keyword Spotting] Detected keyword: {keyword}")
-        return True
-    else:
-        print("[Keyword Spotting] Keyword not detected.")
-        return False
-
+    return keyword.lower() in text.lower()
 
 # ----------------------------
 # RECORD short audio for external STT
 # ----------------------------
 def record_audio(duration_seconds, filename):
-    print(f"[Recording] Capturing {duration_seconds}s of audio...")
     chunk = 1024
     fmt = pyaudio.paInt16
     channels = 1
@@ -143,7 +116,6 @@ def record_audio(duration_seconds, filename):
                     frames_per_buffer=chunk)
 
     frames = []
-
     for _ in range(int(rate / chunk * duration_seconds)):
         data = stream.read(chunk)
         frames.append(data)
@@ -158,33 +130,78 @@ def record_audio(duration_seconds, filename):
     wf.setframerate(rate)
     wf.writeframes(b''.join(frames))
     wf.close()
-    print(f"[Recording] Audio saved as {filename}")
 
 # ----------------------------
-# MAIN FLOW
+# STREAMLIT APP
 # ----------------------------
-if __name__ == "__main__":
-    # Replace with your API keys
-    ASSEMBLYAI_API_KEY = "YOUR_ASSEMBLYAI_API_KEY"
-    ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY"
-    
-    # 1. Local TTS
-    local_text_to_speech("Hello! Please say something after the beep.")
-    
-    # 2. Local STT
-    spoken_text = local_speech_to_text()
-    
-    # 3. Keyword Spotting locally
-    keyword_spotting(spoken_text, keyword="hello")
-    
-    # 4. Record Audio and send to external API for STT
-    temp_audio_path = "temp_record.wav"
-    record_audio(5, temp_audio_path)
-    external_transcription = external_speech_to_text(ASSEMBLYAI_API_KEY, temp_audio_path)
-    
-    # 5. External TTS
-    external_text_to_speech(ELEVENLABS_API_KEY, f"You said: {external_transcription}")
-    
-    # Cleanup temp audio
-    if os.path.exists(temp_audio_path):
-        os.remove(temp_audio_path)
+st.title("🎙️ Speech Processing App")
+st.markdown("This app allows you to perform **Text-to-Speech**, **Speech-to-Text**, use **external APIs**, and detect **keywords**!")
+
+# API keys
+assemblyai_api_key = st.text_input("Enter your AssemblyAI API Key:", type="password")
+elevenlabs_api_key = st.text_input("Enter your ElevenLabs API Key:", type="password")
+
+# Tabs
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Local TTS", "Local STT", "Keyword Spotting", "External STT", "External TTS"])
+
+# --- Local TTS ---
+with tab1:
+    st.header("🔊 Local Text-to-Speech")
+    tts_text = st.text_area("Text to speak:")
+    if st.button("Speak Locally"):
+        if tts_text.strip():
+            local_text_to_speech(tts_text)
+        else:
+            st.warning("Please enter some text.")
+
+# --- Local STT ---
+with tab2:
+    st.header("🎤 Local Speech-to-Text")
+    if st.button("Start Listening Locally"):
+        local_result = local_speech_to_text()
+        st.success(f"You said: {local_result}")
+
+# --- Keyword Spotting ---
+with tab3:
+    st.header("🔎 Keyword Spotting")
+    user_text = st.text_area("Enter text to analyze:")
+    keyword = st.text_input("Keyword to detect:")
+    if st.button("Detect Keyword"):
+        if user_text and keyword:
+            found = keyword_spotting(user_text, keyword)
+            if found:
+                st.success(f"Keyword '{keyword}' detected!")
+            else:
+                st.error(f"Keyword '{keyword}' not found.")
+
+# --- External STT ---
+with tab4:
+    st.header("🌎 External Speech-to-Text (AssemblyAI)")
+    if assemblyai_api_key:
+        if st.button("Record 5s Audio and Send to API"):
+            temp_audio_path = "temp_audio.wav"
+            record_audio(5, temp_audio_path)
+            with st.spinner("Sending audio and waiting for transcription..."):
+                transcription = external_speech_to_text(assemblyai_api_key, temp_audio_path)
+                st.success(f"External transcription: {transcription}")
+            os.remove(temp_audio_path)
+    else:
+        st.warning("Please enter your AssemblyAI API Key above.")
+
+# --- External TTS ---
+with tab5:
+    st.header("🌎 External Text-to-Speech (ElevenLabs)")
+    ext_tts_text = st.text_area("Text to convert to speech externally:")
+    if elevenlabs_api_key:
+        if st.button("Send Text to External TTS"):
+            if ext_tts_text.strip():
+                audio_path = external_text_to_speech(elevenlabs_api_key, ext_tts_text)
+                if audio_path:
+                    st.audio(audio_path)
+                    os.remove(audio_path)
+                else:
+                    st.error("Error generating audio from external service.")
+            else:
+                st.warning("Please enter text.")
+    else:
+        st.warning("Please enter your ElevenLabs API Key above.")
