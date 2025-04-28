@@ -48,7 +48,7 @@ ventana.geometry("800x600")
 
 tk.Label(ventana, text="Introduce tu texto:").pack(pady=5)
 entrada_texto = tk.Text(ventana, height=10, wrap=tk.WORD)
-entrada_texto.pack(fill=tk.BOTH, expand=True, padx=10)
+entrada_texto.pack(fill=tk.BOTH, expand=True, padx=10) 
 
 boton = tk.Button(ventana, text="Mejorar texto", command=procesar_texto)
 boton.pack(pady=10)
