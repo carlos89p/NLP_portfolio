@@ -76,3 +76,37 @@ def external_speech_to_text(api_key, audio_file_path):
         elif polling['status'] == 'failed':
             print("[External STT] Failed to transcribe.")
             return ""
+        
+
+# ----------------------------
+# EXTERNAL API Text-To-Speech
+# (Using ElevenLabs API for TTS)
+# ----------------------------
+def external_text_to_speech(api_key, text, voice_id="EXAVITQu4vr4xnSDxMaL"):
+    print("[External TTS] Requesting speech from external API...")
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+
+    headers = {
+        "xi-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "text": text,
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        audio_content = response.content
+        temp_audio_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        temp_audio_file.write(audio_content)
+        temp_audio_file.close()
+        print(f"[External TTS] Playing received speech...")
+        os.system(f"start {temp_audio_file.name}" if os.name == 'nt' else f"afplay {temp_audio_file.name}")
+    else:
+        print("[External TTS] Error:", response.text)
