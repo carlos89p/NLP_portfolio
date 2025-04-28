@@ -1,20 +1,17 @@
 import speech_recognition as sr
-import pyttsx3
-import tempfile
 import os
 
-# Texto a Voz (TTS) en WAV
+# Texto a Voz (TTS) usando "say" en Mac
 def local_text_to_speech(text):
-    engine = pyttsx3.init()
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(script_directory, "output_tts.wav")
+    output_path = os.path.join(script_directory, "output_tts.aiff")
     
-    engine.save_to_file(text, output_path)
-    engine.runAndWait()
-    engine.stop()  # <-- MUY importante en Mac para guardar el archivo correctamente
-    print(f"Audio guardado como WAV en: {output_path}")
+    # Usar el comando "say" para generar el audio
+    os.system(f'say -o "{output_path}" "{text}"')
+    
+    print(f"Audio guardado como AIFF en: {output_path}")
 
-# Voz a Texto (STT) desde WAV
+# Voz a Texto (STT) desde WAV o AIFF
 def local_speech_to_text(audio_path):
     recognizer = sr.Recognizer()
     with sr.AudioFile(audio_path) as source:
@@ -45,13 +42,13 @@ def main():
                 print("No se ha introducido texto válido.")
 
         elif choice == '2':
-            audio_file = input("Introduce la ruta del archivo de audio (.wav solamente): ")
+            audio_file = input("Introduce la ruta del archivo de audio (.wav o .aiff): ")
             if not os.path.isfile(audio_file):
                 print("Archivo no encontrado.")
                 continue
 
-            if not audio_file.lower().endswith('.wav'):
-                print("Este programa solo puede transcribir archivos WAV directamente.")
+            if not (audio_file.lower().endswith('.wav') or audio_file.lower().endswith('.aiff')):
+                print("Este programa solo puede transcribir archivos WAV o AIFF directamente.")
                 continue
 
             transcription = local_speech_to_text(audio_file)
